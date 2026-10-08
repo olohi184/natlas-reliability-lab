@@ -40,6 +40,7 @@ page = st.sidebar.radio(
         "Evaluation Playground",
         "Benchmark Lab",
         "Reliability Dashboard",
+        "NARL-60 Automated Evaluation",
         "About NARL",
     ],
 )
@@ -278,6 +279,59 @@ elif page == "Reliability Dashboard":
                 "Do not upload sensitive, confidential or unpublished research "
                 "data to a public demo without permission."
             )
+
+
+
+elif page == "NARL-60 Automated Evaluation":
+    import pandas as pd
+    from narl.automated_evaluation import analyze
+
+    st.header("NARL-60 Automated Evaluation")
+    st.info(
+        "AI-assisted evaluations, not independent human validation. "
+        "Scores use the original 1–3 scale, not the Phase 2 0–4 scale."
+    )
+    raw_file = st.file_uploader(
+        "Upload NARL60_NATLAS_RAW_180_FINAL.csv",
+        type="csv", key="narl60_raw"
+    )
+    evaluation_file = st.file_uploader(
+        "Upload NARL60_stage3F_unblinded_semantic_evaluation.csv",
+        type="csv", key="narl60_evaluated"
+    )
+    st.caption("Uploads are processed in the current session and are not committed to GitHub.")
+    if raw_file is not None and evaluation_file is not None:
+        try:
+            if raw_file.size > 5_000_000 or evaluation_file.size > 5_000_000:
+                raise ValueError("Each file must be smaller than 5 MB")
+            raw = pd.read_csv(raw_file)
+            evaluated = pd.read_csv(evaluation_file)
+            if len(raw) > 10000 or len(evaluated) > 10000:
+                raise ValueError("Maximum 10,000 rows per file")
+            matched, summary, score_means = analyze(raw, evaluated)
+        except (ValueError, pd.errors.ParserError, UnicodeError) as exc:
+            st.error(f"Could not analyse the uploaded files: {exc}")
+        else:
+            st.success(f"Verified {len(matched)} matching model-response records.")
+            st.subheader("Outcomes by language")
+            st.dataframe(summary, use_container_width=True, hide_index=True)
+            st.bar_chart(summary.set_index("language")[
+                ["semantic_complete_pct", "length_limit_stops_pct"]
+            ])
+            st.subheader("AI-evaluator mean scores (1–3)")
+            st.dataframe(score_means, use_container_width=True)
+            st.caption(
+                "A length-limit stop is not necessarily semantic incompleteness. "
+                "The charts are descriptive and do not establish causality."
+            )
+            st.download_button(
+                "Download language summary CSV",
+                summary.to_csv(index=False).encode("utf-8-sig"),
+                file_name="narl60_language_summary.csv",
+                mime="text/csv",
+            )
+    else:
+        st.info("Upload the two matching NARL-60 CSV files to view real results.")
 
 
 # ---------------------------------------------------------
