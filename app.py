@@ -154,23 +154,130 @@ elif page == "Benchmark Lab":
 
 elif page == "Reliability Dashboard":
 
+    import io
+    import pandas as pd
+    from narl.scoring import DIMENSIONS, ScoringError, summarize_phase2, validate_phase2_scores
+
     st.header("Reliability Dashboard")
-
     st.write(
-        "Evaluation results and reliability indicators will appear "
-        "here after genuine N-ATLAS tests have been completed."
+        "Explore **uploaded, evaluator-scored Phase 2 results**. "
+        "The five dimensions use a 0–4 scale. This dashboard does not "
+        "call N-ATLaS or score model responses automatically."
     )
 
-    metric1, metric2, metric3 = st.columns(3)
-
-    metric1.metric("Evaluations", "0")
-    metric2.metric("Languages Tested", "0")
-    metric3.metric("Flagged Cases", "0")
-
-    st.info(
-        "No evaluation results are displayed yet because the "
-        "N-ATLAS integration has not been activated."
+    scored_file = st.file_uploader(
+        "Upload Phase 2 scored evaluation CSV",
+        type=["csv"],
+        key="phase2_scored_upload",
+        help="Required columns: LF, IA, TQ, CA, SR. "
+             "Optional: language, domain, prompt_id, run_id.",
     )
+
+    if scored_file is None:
+        st.info(
+            "No scored evaluation file uploaded. Results shown here will come "
+            "only from your uploaded CSV, not synthetic examples."
+        )
+        st.caption(
+            "CSV columns: LF, IA, TQ, CA, SR (integer scores 0–4). "
+            "Add a language column to compare languages."
+        )
+    else:
+        try:
+            if scored_file.size > 5 * 1024 * 1024:
+                raise ValueError("CSV exceeds the 5 MB upload limit for this dashboard.")
+            frame = pd.read_csv(scored_file, dtype=str, keep_default_na=False)
+            if frame.empty:
+                raise ValueError("The uploaded CSV has no data rows.")
+            if len(frame) > 10000:
+                raise ValueError("Upload at most 10,000 evaluation rows at a time.")
+            if frame.columns.duplicated().any():
+                raise ValueError("Duplicate CSV column names are not supported.")
+            records = frame.to_dict(orient="records")
+            for index, record in enumerate(records, start=2):
+                try:
+                    validate_phase2_scores(record)
+                except ScoringError as error:
+                    raise ValueError(f"Row {index}: {error}") from error
+        except (ValueError, pd.errors.ParserError, UnicodeError) as error:
+            st.error(f"Could not validate this evaluation CSV: {error}")
+        else:
+            st.success(f"Validated {len(records)} evaluator-scored rows.")
+            st.caption(
+                "Source: user-uploaded evaluation CSV. Values are descriptive, "
+                "not independent evidence of model reliability."
+            )
+            score_frame = frame.copy()
+            for code in DIMENSIONS:
+                score_frame[code] = score_frame[code].astype(int)
+            score_frame["dimension_sum"] = score_frame[list(DIMENSIONS)].sum(axis=1)
+            low_score_threshold = st.slider(
+                "Flag rows where any dimension is at or below",
+                min_value=0, max_value=3, value=1,
+            )
+            flagged = score_frame[
+                score_frame[list(DIMENSIONS)].le(low_score_threshold).any(axis=1)
+            ]
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Scored rows", len(score_frame))
+            m2.metric(
+                "Languages represented",
+                score_frame["language"].replace("", pd.NA).nunique()
+                if "language" in score_frame else "Not provided",
+            )
+            m3.metric("Flagged rows", len(flagged))
+
+            overall = summarize_phase2(records)[0]
+            st.subheader("Average scores by dimension (0–4)")
+            dimension_means = pd.DataFrame({
+                "Dimension": [DIMENSIONS[key] for key in DIMENSIONS],
+                "Mean score": [overall[f"{key}_mean"] for key in DIMENSIONS],
+            }).set_index("Dimension")
+            st.bar_chart(dimension_means)
+
+            if "language" in score_frame and score_frame["language"].str.strip().ne("").all():
+                st.subheader("Language comparison")
+                language_summaries = summarize_phase2(records, group_by="language")
+                comparison = pd.DataFrame(language_summaries).rename(
+                    columns={"group": "Language", "n": "Scored rows"}
+                )
+                st.dataframe(comparison, use_container_width=True, hide_index=True)
+            elif "language" in score_frame:
+                st.warning("Some language values are blank; language comparison is unavailable.")
+
+            st.subheader("Flagged cases for human review")
+            if flagged.empty:
+                st.info("No rows meet the selected low-score threshold.")
+            else:
+                display_columns = [
+                    col for col in ("prompt_id", "run_id", "language", "domain", *DIMENSIONS)
+                    if col in flagged.columns
+                ]
+                st.dataframe(
+                    flagged[display_columns],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            st.caption(
+                "A flagged case means at least one recorded dimension score "
+                "is at or below the selected threshold. It is not an automated "
+                "judgment about safety or correctness."
+            )
+
+            st.subheader("Export descriptive summary")
+            summary = pd.DataFrame([
+                {"group": "all", **overall},
+            ])
+            st.download_button(
+                "Download summary CSV",
+                data=summary.to_csv(index=False).encode("utf-8-sig"),
+                file_name="narl_phase2_descriptive_summary.csv",
+                mime="text/csv",
+            )
+            st.caption(
+                "Do not upload sensitive, confidential or unpublished research "
+                "data to a public demo without permission."
+            )
 
 
 # ---------------------------------------------------------
