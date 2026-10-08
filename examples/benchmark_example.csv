@@ -1,0 +1,5 @@
+item_id,language,domain,prompt
+example-001,Nigerian English,Education,What is the purpose of a library?
+example-002,Hausa,General,Give a brief greeting in Hausa.
+example-003,Yoruba,General,Give a brief greeting in Yoruba.
+example-004,Igbo,General,Give a brief greeting in Igbo.
