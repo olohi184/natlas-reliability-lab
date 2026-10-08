@@ -63,6 +63,7 @@ st.sidebar.caption("Multilingual AI Reliability Lab")
 page = st.sidebar.radio(
     "Navigation",
     [
+        "Challenge Overview",
         "NARL-60 Automated Evaluation",
         "Reliability Dashboard",
         "Benchmark Lab",
@@ -78,10 +79,115 @@ st.sidebar.caption("Developer Infrastructure")
 
 
 # ---------------------------------------------------------
+# Challenge overview: verified frozen aggregate snapshot
+# ---------------------------------------------------------
+if page == "Challenge Overview":
+    import pandas as pd
+    import plotly.express as px
+
+    st.header("Challenge Overview")
+    st.write(
+        "A developer toolkit for identifying multilingual reliability gaps "
+        "in N-ATLaS. This public demonstration shows a **frozen aggregate "
+        "snapshot** of the NARL-60 experiment; no raw prompts or model "
+        "responses are published on this page."
+    )
+    st.caption(
+        "Source: NARL-60 original 180-response experiment and Stage 3F "
+        "unblinded AI-assisted semantic evaluations. Not live inference."
+    )
+    a, b, c, d = st.columns(4)
+    a.metric("Benchmark prompts", "60")
+    b.metric("Model responses", "180")
+    c.metric("Languages tested", "4")
+    d.metric("AI-judged complete", "79 / 180")
+
+    snapshot = pd.DataFrame([
+        {"Language": "Nigerian English", "Responses": 45, "Complete": 42,
+         "Length-limit stops": 3, "Factual-error flags": 2, "Unsafe-advice flags": 1},
+        {"Language": "Hausa", "Responses": 45, "Complete": 19,
+         "Length-limit stops": 27, "Factual-error flags": 3, "Unsafe-advice flags": 1},
+        {"Language": "Igbo", "Responses": 45, "Complete": 12,
+         "Length-limit stops": 30, "Factual-error flags": 6, "Unsafe-advice flags": 3},
+        {"Language": "Yoruba", "Responses": 45, "Complete": 6,
+         "Length-limit stops": 35, "Factual-error flags": 8, "Unsafe-advice flags": 3},
+    ])
+    snapshot["Semantic completion (%)"] = (
+        snapshot["Complete"] / snapshot["Responses"] * 100
+    ).round(1)
+    snapshot["Length-limit stops (%)"] = (
+        snapshot["Length-limit stops"] / snapshot["Responses"] * 100
+    ).round(1)
+
+    st.subheader("Multilingual reliability snapshot")
+    comparison = snapshot.melt(
+        id_vars="Language",
+        value_vars=["Semantic completion (%)", "Length-limit stops (%)"],
+        var_name="Indicator", value_name="Percent",
+    )
+    fig = px.bar(
+        comparison, x="Language", y="Percent", color="Indicator",
+        barmode="group", text_auto=".1f",
+        color_discrete_map={
+            "Semantic completion (%)": "#087f8c",
+            "Length-limit stops (%)": "#e6a34a",
+        },
+    )
+    fig.update_yaxes(range=[0, 105], title="Percentage of responses")
+    fig.update_layout(
+        legend_title_text="", plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=10),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(
+        "Each language has 45 responses. These indicators can overlap: "
+        "a generation-length stop is not proof of semantic incompleteness."
+    )
+
+    with st.expander("View complete aggregate results"):
+        st.dataframe(snapshot, use_container_width=True, hide_index=True)
+        st.caption(
+            "Factual-error and unsafe-advice flags are AI-evaluator judgments, "
+            "not independently adjudicated errors."
+        )
+
+    st.subheader("What the benchmark demonstrates")
+    left, right = st.columns(2)
+    with left:
+        st.markdown(
+            "**Cross-language visibility**\\n\\n"
+            "NARL surfaces substantial differences in AI-judged completion "
+            "across Nigerian English, Hausa, Igbo and Yoruba."
+        )
+    with right:
+        st.markdown(
+            "**Reliability diagnostics**\\n\\n"
+            "NARL separates semantic evaluation from generation-length "
+            "stopping behaviour and provides reproducible analysis workflows."
+        )
+
+    st.subheader("Explore the toolkit")
+    st.write(
+        "Use **NARL-60 Automated Evaluation** in the sidebar to load your "
+        "own original and unblinded CSVs, verify run-ID matches, inspect "
+        "score dimensions and upload truncation-adjusted estimates."
+    )
+    st.link_button(
+        "View source code and documentation",
+        "https://github.com/olohi184/natlas-reliability-lab",
+    )
+    st.caption(
+        "Methodological scope: the semantic ratings are AI-assisted; "
+        "independent expert validation is a future extension. "
+        "The Evaluation Playground does not yet perform live N-ATLaS inference."
+    )
+
+
+# ---------------------------------------------------------
 # Evaluation Playground
 # ---------------------------------------------------------
 
-if page == "Evaluation Playground":
+elif page == "Evaluation Playground":
 
     st.header("N-ATLAS Evaluation Playground")
 
