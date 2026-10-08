@@ -14,33 +14,59 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# Header
+# Research dashboard design system
 # ---------------------------------------------------------
+st.markdown("""
+<style>
+:root { --narl-navy:#10233f; --narl-teal:#087f8c; }
+.block-container { padding-top:1.8rem; padding-bottom:3rem; max-width:1320px; }
+section[data-testid="stSidebar"] { background:linear-gradient(180deg,#10233f,#193958); }
+section[data-testid="stSidebar"] * { color:#f3f7fb !important; }
+section[data-testid="stSidebar"] [data-testid="stRadio"] label { border-radius:8px; }
+.narl-hero {
+  background:linear-gradient(110deg,#10233f 0%,#174666 72%,#087f8c 100%);
+  padding:2rem 2.2rem; border-radius:18px; color:white;
+  box-shadow:0 10px 30px rgba(16,35,63,.14); margin-bottom:1.2rem;
+}
+.narl-eyebrow { color:#b7e5e4; font-size:.78rem; font-weight:700;
+  letter-spacing:.13em; text-transform:uppercase; margin-bottom:.65rem; }
+.narl-hero h1 { color:#fff; font-size:2.1rem; margin:0 0 .55rem 0; }
+.narl-hero p { color:#e2eff5; font-size:1rem; max-width:780px; margin:0; }
+.narl-pill { display:inline-block; background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.24); border-radius:50px;
+  padding:.32rem .7rem; margin:.9rem .35rem 0 0; font-size:.8rem; color:#fff; }
+div[data-testid="stMetric"] { background:rgba(123,156,175,.07);
+  border:1px solid rgba(123,156,175,.22); border-radius:12px; padding:1rem; }
+div[data-testid="stFileUploader"] { border-radius:12px; }
+h2,h3 { letter-spacing:-.025em; }
+</style>
+""", unsafe_allow_html=True)
 
-st.title("🧪 N-ATLAS Reliability Lab (NARL)")
-
-st.subheader(
-    "Testing Nigeria's sovereign AI for reliable multilingual deployment."
-)
-
-st.info(
-    "NARL is an open-source developer toolkit for testing, benchmarking, "
-    "and evaluating N-ATLAS across multilingual and real-world contexts."
-)
+st.markdown("""
+<div class="narl-hero">
+  <div class="narl-eyebrow">National AI Innovation Challenge 2026 · Developer Infrastructure</div>
+  <h1>N-ATLAS Reliability Lab</h1>
+  <p>Evidence-led benchmarking for trustworthy, multilingual AI deployment in Nigeria.</p>
+  <span class="narl-pill">NARL-60 Benchmark</span>
+  <span class="narl-pill">Four Languages</span>
+  <span class="narl-pill">Reliability &amp; Safety Analysis</span>
+</div>
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # Sidebar
 # ---------------------------------------------------------
 
-st.sidebar.title("NARL")
+st.sidebar.title("🧪 NARL")
+st.sidebar.caption("Multilingual AI Reliability Lab")
 
 page = st.sidebar.radio(
     "Navigation",
     [
-        "Evaluation Playground",
-        "Benchmark Lab",
-        "Reliability Dashboard",
         "NARL-60 Automated Evaluation",
+        "Reliability Dashboard",
+        "Benchmark Lab",
+        "Evaluation Playground",
         "About NARL",
     ],
 )
@@ -286,11 +312,16 @@ elif page == "NARL-60 Automated Evaluation":
     import pandas as pd
     from narl.automated_evaluation import analyze
 
-    st.header("NARL-60 Automated Evaluation")
-    st.info(
-        "AI-assisted evaluations, not independent human validation. "
-        "Scores use the original 1–3 scale, not the Phase 2 0–4 scale."
+    st.header("NARL-60 · Multilingual Reliability Observatory")
+    st.write(
+        "Explore verified N-ATLaS experiment records and language-level reliability "
+        "patterns. Upload the original response and unblinded evaluation CSVs to begin."
     )
+    st.caption(
+        "Evidence scope: AI-assisted semantic evaluation on a 1–3 scale. "
+        "Independent expert validation is a future extension."
+    )
+    st.markdown("#### Load your experiment")
     raw_file = st.file_uploader(
         "Upload NARL60_NATLAS_RAW_180_FINAL.csv",
         type="csv", key="narl60_raw"
@@ -313,6 +344,12 @@ elif page == "NARL-60 Automated Evaluation":
             st.error(f"Could not analyse the uploaded files: {exc}")
         else:
             st.success(f"Verified {len(matched)} matching model-response records.")
+            k1, k2, k3, k4 = st.columns(4)
+            k1.metric("Responses analysed", len(matched))
+            k2.metric("Languages", summary.shape[0])
+            k3.metric("AI-judged complete", int(matched["semantic_complete"].sum()))
+            k4.metric("Length-limit stops", int(matched["length_limit_stop"].sum()))
+            st.divider()
             st.subheader("Outcomes by language")
             st.dataframe(summary, use_container_width=True, hide_index=True)
             import plotly.express as px
@@ -331,11 +368,11 @@ elif page == "NARL-60 Automated Evaluation":
             )
             fig.update_yaxes(range=[0, 100])
             st.plotly_chart(fig, use_container_width=True)
-            st.subheader("AI-evaluator mean scores (1–3)")
+            st.subheader("Quality dimensions · AI-evaluator scores (1–3)")
             st.dataframe(score_means, use_container_width=True)
             st.caption(
-                "A length-limit stop is not necessarily semantic incompleteness. "
-                "The charts are descriptive and do not establish causality."
+                "Completion and length-limit stops are separate, potentially overlapping "
+                "outcomes. These descriptive charts do not establish causality."
             )
             st.subheader("Truncation-adjusted findings (Stage 3G H3)")
             adjusted_file = st.file_uploader(
@@ -378,8 +415,7 @@ elif page == "NARL-60 Automated Evaluation":
                     st.caption(
                         "Uploaded historical regression results; not recomputed here. "
                         "A negative coefficient indicates association with lower evaluator "
-                        "scores under the original model specification, not causation. "
-                        "No independent human validation is claimed."
+                        "scores under the original model specification, not causation."
                     )
                     st.download_button(
                         "Download adjusted-results table",
