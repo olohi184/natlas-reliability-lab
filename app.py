@@ -68,6 +68,7 @@ page = st.sidebar.radio(
         "Reliability Dashboard",
         "Benchmark Lab",
         "Evaluation Playground",
+        "Live Model Testing",
         "About NARL",
     ],
 )
@@ -292,6 +293,50 @@ elif page == "Evaluation Playground":
                 f"**Timestamp:** "
                 f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
+
+
+# ---------------------------------------------------------
+# Reviewer live model testing — external Colab execution
+# ---------------------------------------------------------
+elif page == "Live Model Testing":
+    st.header("Live N-ATLaS Model Testing")
+    st.write(
+        "Reviewers can generate a new response with the actual N-ATLaS "
+        "GGUF model using the linked Google Colab notebook. The model "
+        "runs inside the reviewer's Colab session, not on this Streamlit server."
+    )
+    st.info(
+        "Live inference is available through the Colab workflow below. "
+        "Direct inference inside this Streamlit app is not yet connected."
+    )
+    st.subheader("Run a real-model test")
+    st.markdown(
+        "1. Open the reviewer notebook in Google Colab.\\n"
+        "2. Select **Runtime → Run all** and wait for the model to load.\\n"
+        "3. Inspect the generated response, finish reason and model details.\\n"
+        "4. Change the prompt and rerun the generation cell to test another case."
+    )
+    st.link_button(
+        "Open N-ATLaS Reviewer Demo in Colab",
+        "https://colab.research.google.com/github/olohi184/"
+        "natlas-reliability-lab/blob/main/examples/NARL_NATLaS_Reviewer_Demo.ipynb",
+    )
+    st.link_button(
+        "View notebook source on GitHub",
+        "https://github.com/olohi184/natlas-reliability-lab/blob/main/"
+        "examples/NARL_NATLaS_Reviewer_Demo.ipynb",
+    )
+    st.caption(
+        "The notebook uses tosinamuda/N-ATLaS-GGUF, "
+        "N-ATLaS-GGUF-Q4_K_M.gguf, and llama-cpp-python. "
+        "A language label alone does not translate an English prompt."
+    )
+    st.subheader("Evaluate recorded responses")
+    st.write(
+        "To test NARL's analysis tools, use the **Reliability Dashboard** "
+        "for scored CSV uploads or **NARL-60 Automated Evaluation** for "
+        "matching original response and evaluation CSV files."
+    )
 
 
 # ---------------------------------------------------------
