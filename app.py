@@ -166,6 +166,42 @@ if page == "Challenge Overview":
             "stopping behaviour and provides reproducible analysis workflows."
         )
 
+    st.subheader("Research contributions")
+    p1, p2, p3 = st.columns(3)
+    with p1:
+        st.markdown(
+            "**Multilingual benchmarking**\\n\\n"
+            "A structured 60-prompt benchmark and 180 recorded responses "
+            "covering Nigerian English, Hausa, Igbo and Yoruba."
+        )
+    with p2:
+        st.markdown(
+            "**Reproducible evaluation**\\n\\n"
+            "Run-ID linkage, score validation and documented AI-assisted "
+            "semantic evaluation enable traceable comparisons."
+        )
+    with p3:
+        st.markdown(
+            "**Reliability diagnostics**\\n\\n"
+            "Language-level completion, error flags and generation-length "
+            "analyses help identify deployment risks for further study."
+        )
+
+    st.divider()
+    st.subheader("Project leadership")
+    st.markdown("**Olohimai Juliet Michael**")
+    st.write("Project Lead & Lead Developer · N-ATLAS Reliability Lab (NARL)")
+    st.caption(
+        "Principal Communication Engineer, NASRDA · PhD Researcher, "
+        "African University of Science and Technology (AUST). "
+        "Affiliations are provided for identification and do not imply "
+        "institutional endorsement."
+    )
+    st.markdown(
+        "[GitHub profile](https://github.com/olohi184) · "
+        "[Project repository](https://github.com/olohi184/natlas-reliability-lab)"
+    )
+
     st.subheader("Explore the toolkit")
     st.write(
         "Use **NARL-60 Automated Evaluation** in the sidebar to load your "
