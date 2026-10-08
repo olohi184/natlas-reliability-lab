@@ -1,0 +1,23 @@
+name: NARL Python Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate Python sources
+        run: python -m compileall -q narl tests
+      - name: Run benchmark validation tests
+        run: python -m unittest discover -s tests -v
