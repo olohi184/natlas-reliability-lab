@@ -315,15 +315,84 @@ elif page == "NARL-60 Automated Evaluation":
             st.success(f"Verified {len(matched)} matching model-response records.")
             st.subheader("Outcomes by language")
             st.dataframe(summary, use_container_width=True, hide_index=True)
-            st.bar_chart(summary.set_index("language")[
-                ["semantic_complete_pct", "length_limit_stops_pct"]
-            ])
+            import plotly.express as px
+            comparison = summary.melt(
+                id_vars="language",
+                value_vars=["semantic_complete_pct", "length_limit_stops_pct"],
+                var_name="Outcome", value_name="Percentage",
+            )
+            comparison["Outcome"] = comparison["Outcome"].replace({
+                "semantic_complete_pct": "AI-judged semantic completion",
+                "length_limit_stops_pct": "Generation length-limit stop",
+            })
+            fig = px.bar(
+                comparison, x="language", y="Percentage", color="Outcome",
+                barmode="group", labels={"language": "Language"},
+            )
+            fig.update_yaxes(range=[0, 100])
+            st.plotly_chart(fig, use_container_width=True)
             st.subheader("AI-evaluator mean scores (1–3)")
             st.dataframe(score_means, use_container_width=True)
             st.caption(
                 "A length-limit stop is not necessarily semantic incompleteness. "
                 "The charts are descriptive and do not establish causality."
             )
+            st.subheader("Truncation-adjusted findings (Stage 3G H3)")
+            adjusted_file = st.file_uploader(
+                "Optional: upload NARL60_stage3G_H3_adjusted_truncation_results.csv",
+                type="csv", key="narl60_adjusted",
+            )
+            if adjusted_file is not None:
+                try:
+                    if adjusted_file.size > 5_000_000:
+                        raise ValueError("Adjusted results file must be smaller than 5 MB")
+                    adjusted = pd.read_csv(adjusted_file)
+                    required = {
+                        "outcome", "coefficient_truncation", "ci95_low",
+                        "ci95_high", "holm_p_value", "holm_reject",
+                    }
+                    if adjusted.empty or not required.issubset(adjusted.columns):
+                        raise ValueError("The uploaded file is missing required Stage 3G H3 columns")
+                    for field in ("coefficient_truncation", "ci95_low", "ci95_high", "holm_p_value"):
+                        adjusted[field] = pd.to_numeric(adjusted[field], errors="raise")
+                    if adjusted[list(required - {"outcome", "holm_reject"})].isna().any().any():
+                        raise ValueError("Missing regression estimates")
+                    significance = adjusted["holm_reject"].astype(str).str.lower()
+                    if not significance.isin(["true", "false"]).all():
+                        raise ValueError("Invalid Holm correction significance flags")
+                    adjusted["Holm significant"] = significance.eq("true")
+                except (ValueError, pd.errors.ParserError, UnicodeError) as exc:
+                    st.error(f"Cannot read truncation results: {exc}")
+                else:
+                    shown = adjusted[[
+                        "outcome", "coefficient_truncation", "ci95_low",
+                        "ci95_high", "holm_p_value", "Holm significant",
+                    ]].rename(columns={
+                        "outcome": "Evaluation dimension",
+                        "coefficient_truncation": "Truncation coefficient",
+                        "ci95_low": "95% CI lower",
+                        "ci95_high": "95% CI upper",
+                        "holm_p_value": "Holm-adjusted p",
+                    })
+                    st.dataframe(shown, use_container_width=True, hide_index=True)
+                    st.caption(
+                        "Uploaded historical regression results; not recomputed here. "
+                        "A negative coefficient indicates association with lower evaluator "
+                        "scores under the original model specification, not causation. "
+                        "No independent human validation is claimed."
+                    )
+                    st.download_button(
+                        "Download adjusted-results table",
+                        shown.to_csv(index=False).encode("utf-8-sig"),
+                        file_name="narl60_truncation_adjusted_summary.csv",
+                        mime="text/csv",
+                    )
+            else:
+                st.caption(
+                    "Upload the Stage 3G H3 CSV to view existing truncation-adjusted "
+                    "coefficients, confidence intervals and Holm-corrected significance."
+                )
+
             st.download_button(
                 "Download language summary CSV",
                 summary.to_csv(index=False).encode("utf-8-sig"),
