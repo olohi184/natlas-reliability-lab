@@ -152,39 +152,43 @@ if page == "Challenge Overview":
         )
 
     st.subheader("What the benchmark demonstrates")
-    left, right = st.columns(2)
+    left, right = st.columns(2, gap="large")
     with left:
-        st.markdown(
-            "**Cross-language visibility**\\n\\n"
-            "NARL surfaces substantial differences in AI-judged completion "
-            "across Nigerian English, Hausa, Igbo and Yoruba."
+        st.markdown("**Cross-language visibility**")
+        st.write(
+            "NARL reveals substantial differences in AI-judged semantic "
+            "completion across Nigerian English, Hausa, Igbo and Yoruba."
         )
     with right:
-        st.markdown(
-            "**Reliability diagnostics**\\n\\n"
-            "NARL separates semantic evaluation from generation-length "
-            "stopping behaviour and provides reproducible analysis workflows."
+        st.markdown("**Reliability diagnostics**")
+        st.write(
+            "The toolkit distinguishes semantic evaluation outcomes from "
+            "generation-length stopping behaviour, supporting clearer "
+            "investigation of multilingual reliability."
         )
 
     st.subheader("Research contributions")
-    p1, p2, p3 = st.columns(3)
+    p1, p2, p3 = st.columns(3, gap="large")
     with p1:
-        st.markdown(
-            "**Multilingual benchmarking**\\n\\n"
-            "A structured 60-prompt benchmark and 180 recorded responses "
-            "covering Nigerian English, Hausa, Igbo and Yoruba."
+        st.markdown("**01 · Multilingual Benchmarking**")
+        st.write(
+            "A structured evaluation of 180 N-ATLaS model responses across "
+            "Nigerian English, Hausa, Igbo and Yoruba, using the NARL-60 "
+            "benchmark to identify differences in language-level performance."
         )
     with p2:
-        st.markdown(
-            "**Reproducible evaluation**\\n\\n"
-            "Run-ID linkage, score validation and documented AI-assisted "
-            "semantic evaluation enable traceable comparisons."
+        st.markdown("**02 · Reproducible Evaluation Framework**")
+        st.write(
+            "A traceable workflow that links model responses to AI-assisted "
+            "semantic assessments, validates scoring records and supports "
+            "consistent comparisons across languages."
         )
     with p3:
-        st.markdown(
-            "**Reliability diagnostics**\\n\\n"
-            "Language-level completion, error flags and generation-length "
-            "analyses help identify deployment risks for further study."
+        st.markdown("**03 · Reliability Diagnostics and Insights**")
+        st.write(
+            "Analysis of semantic completion, factual-error and safety flags, "
+            "and generation-length limitations to help researchers investigate "
+            "potential reliability risks in multilingual AI systems."
         )
 
     st.divider()
