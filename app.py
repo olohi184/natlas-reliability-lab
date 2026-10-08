@@ -310,12 +310,11 @@ elif page == "Live Model Testing":
         "Direct inference inside this Streamlit app is not yet connected."
     )
     st.subheader("Run a real-model test")
-    st.markdown(
-        "1. Open the reviewer notebook in Google Colab.\\n"
-        "2. Select **Runtime → Run all** and wait for the model to load.\\n"
-        "3. Inspect the generated response, finish reason and model details.\\n"
-        "4. Change the prompt and rerun the generation cell to test another case."
-    )
+    st.markdown("**Step 1 — Open the reviewer notebook in Google Colab.**")
+    st.markdown("**Step 2 — Select Runtime → Run all.** Wait for the model to load.")
+    st.markdown("**Step 3 — Inspect the output.** Check the response, finish reason and model details.")
+    st.markdown("**Step 4 — Try another prompt.** Edit the prompt and rerun the generation cell.")
+
     st.link_button(
         "Open N-ATLaS Reviewer Demo in Colab",
         "https://colab.research.google.com/github/olohi184/"
