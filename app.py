@@ -193,9 +193,7 @@ if page == "Challenge Overview":
     st.write("Project Lead & Lead Developer · N-ATLAS Reliability Lab (NARL)")
     st.caption(
         "Principal Communication Engineer, NASRDA · PhD Researcher, "
-        "African University of Science and Technology (AUST). "
-        "Affiliations are provided for identification and do not imply "
-        "institutional endorsement."
+        "African University of Science and Technology (AUST)"
     )
     st.markdown(
         "[GitHub profile](https://github.com/olohi184) · "
