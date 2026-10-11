@@ -728,4 +728,9 @@ elif page == "About NARL":
 
     st.subheader("Project Status")
 
-    st.warning("In active development — N-ATLAS integration pending.")
+    st.info(
+        "Working prototype — N-ATLaS GGUF model integration demonstrated "
+        "through successful inference in Google Colab. This Streamlit app "
+        "provides multilingual benchmark analysis, reliability visualization, "
+        "and CSV validation. Direct inference inside Streamlit is not yet connected."
+    )
