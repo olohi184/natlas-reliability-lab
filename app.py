@@ -351,16 +351,64 @@ elif page == "Benchmark Lab":
         "compare model behaviour across languages and domains."
     )
 
-    uploaded_file = st.file_uploader(
-        "Upload benchmark dataset",
-        type=["csv"],
-    )
+    import io
+    import pandas as pd
 
+    st.info(
+        "This page checks the structure of a benchmark CSV. It does not run "
+        "N-ATLaS inference yet. For scored-result analysis, use Reliability Dashboard."
+    )
+    st.markdown("**Step 1 — Download a sample benchmark CSV**")
+    st.caption("Required columns: prompt_id, language, domain, prompt. "
+               "The example prompts are illustrative, not NARL-60 research data.")
+    benchmark_sample = pd.DataFrame([
+        {"prompt_id": "DEMO-001", "language": "Nigerian English",
+         "domain": "Education", "prompt": "Explain photosynthesis in simple terms."},
+        {"prompt_id": "DEMO-002", "language": "Hausa",
+         "domain": "Agriculture", "prompt": "Bayyana yadda ake shuka masara."},
+        {"prompt_id": "DEMO-003", "language": "Yoruba",
+         "domain": "Education", "prompt": "Ṣàlàyé ìdí tí omi fi ṣe pàtàkì."},
+        {"prompt_id": "DEMO-004", "language": "Igbo",
+         "domain": "Agriculture", "prompt": "Kọwaa otu e si akụ ọka."},
+    ])
+    st.download_button(
+        "Download sample benchmark CSV",
+        data=benchmark_sample.to_csv(index=False).encode("utf-8-sig"),
+        file_name="narl_sample_benchmark.csv",
+        mime="text/csv",
+        key="download_benchmark_sample",
+    )
+    st.markdown("**Step 2 — Upload a benchmark CSV**")
+    uploaded_file = st.file_uploader(
+        "Upload benchmark dataset", type=["csv"],
+        help="CSV must contain prompt_id, language, domain, prompt.",
+    )
     if uploaded_file is not None:
-        st.success(
-            "Benchmark file received. Automated benchmark execution "
-            "will be enabled after N-ATLAS integration."
-        )
+        try:
+            if uploaded_file.size > 5 * 1024 * 1024:
+                raise ValueError("File exceeds 5 MB. Please use a smaller CSV.")
+            frame = pd.read_csv(uploaded_file, dtype=str, keep_default_na=False)
+            required = ["prompt_id", "language", "domain", "prompt"]
+            missing = [column for column in required if column not in frame.columns]
+            if missing:
+                raise ValueError("Missing required columns: " + ", ".join(missing))
+            if frame.empty:
+                raise ValueError("CSV contains no records.")
+            if len(frame) > 10000:
+                raise ValueError("Upload at most 10,000 rows.")
+            if frame.columns.duplicated().any():
+                raise ValueError("Duplicate column names are not supported.")
+            if frame[required].apply(lambda c: c.str.strip().eq("")).any().any():
+                raise ValueError("Required fields cannot be blank.")
+            if frame["prompt_id"].duplicated().any():
+                raise ValueError("Each prompt_id must be unique.")
+        except (ValueError, pd.errors.ParserError, UnicodeError) as exc:
+            st.error(f"Benchmark CSV validation failed: {exc}")
+            st.caption("Download the sample CSV above and keep its column headers.")
+        else:
+            st.success(f"CSV structure validated: {len(frame)} benchmark prompts.")
+            st.dataframe(frame[required].head(10), use_container_width=True, hide_index=True)
+            st.info("Structure check only. No model was run and no reliability scores were generated.")
 
 
 # ---------------------------------------------------------
@@ -380,6 +428,26 @@ elif page == "Reliability Dashboard":
         "call N-ATLaS or score model responses automatically."
     )
 
+    st.markdown("**Step 1 — Download a sample scored CSV**")
+    st.caption(
+        "Required columns: LF, IA, TQ, CA, SR (whole-number evaluator scores 0–4). "
+        "Optional: prompt_id, run_id, language, domain. These are synthetic "
+        "demonstration scores, not NARL-60 experiment results."
+    )
+    sample_scores = pd.DataFrame([
+        {"prompt_id":"DEMO-001","run_id":"D1","language":"Nigerian English","domain":"Education","LF":4,"IA":4,"TQ":3,"CA":4,"SR":4},
+        {"prompt_id":"DEMO-002","run_id":"D2","language":"Hausa","domain":"Agriculture","LF":2,"IA":3,"TQ":3,"CA":3,"SR":4},
+        {"prompt_id":"DEMO-003","run_id":"D3","language":"Yoruba","domain":"Education","LF":1,"IA":2,"TQ":2,"CA":3,"SR":4},
+        {"prompt_id":"DEMO-004","run_id":"D4","language":"Igbo","domain":"Agriculture","LF":3,"IA":3,"TQ":3,"CA":3,"SR":4},
+    ])
+    st.download_button(
+        "Download sample scored CSV",
+        data=sample_scores.to_csv(index=False).encode("utf-8-sig"),
+        file_name="narl_sample_phase2_scored.csv",
+        mime="text/csv",
+        key="download_phase2_sample",
+    )
+    st.markdown("**Step 2 — Upload a scored CSV to validate and summarize**")
     scored_file = st.file_uploader(
         "Upload Phase 2 scored evaluation CSV",
         type=["csv"],
@@ -490,6 +558,9 @@ elif page == "Reliability Dashboard":
                 mime="text/csv",
             )
             st.caption(
+                "The summary is a UTF-8 CSV suitable for Excel or Google Sheets. "
+                "If it does not open by double-clicking, import it using "
+                "Excel Data → From Text/CSV or Google Sheets File → Import. "
                 "Do not upload sensitive, confidential or unpublished research "
                 "data to a public demo without permission."
             )
