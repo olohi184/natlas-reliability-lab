@@ -268,19 +268,21 @@ elif page == "Evaluation Playground":
     )
 
     st.caption(
-        "N-ATLAS model connectivity will be enabled through the "
-        "official integration layer."
+        "This playground prepares structured evaluation requests. "
+        "Real N-ATLaS inference is demonstrated in the linked Google Colab "
+        "workflow under Live Model Testing."
     )
 
-    if st.button("Run N-ATLAS Evaluation", type="primary"):
+    if st.button("Prepare Evaluation Request", type="primary"):
 
         if not prompt.strip():
-            st.warning("Please enter a prompt before running an evaluation.")
+            st.warning("Please enter a prompt before preparing an evaluation request.")
 
         else:
-            st.warning(
-                "N-ATLAS is not connected yet. "
-                "No model response has been generated."
+            st.success(
+                "Evaluation request prepared. To generate an actual N-ATLaS "
+                "response, open the Google Colab workflow under Live Model Testing. "
+                "This page does not execute inference or assign reliability scores."
             )
 
             st.write("### Evaluation Request")
