@@ -5,3 +5,4 @@ scikit-learn
 plotly
 requests
 python-dotenv
+gradio_client>=1.0,<3
